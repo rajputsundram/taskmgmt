@@ -1,5 +1,10 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import Navbar from "../components/header/Navbar";
+import Sidebar from "../components/main/Sidebar";
+import TakeInput from "../components/main/TakeInput";
+import { AuthProvider } from "../context/Authcontext"; // ✅ Import AuthProvider
+import { ToastContainer } from "react-toastify";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -27,7 +32,20 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        {children}
+        {/* ✅ Wrap your app with AuthProvider */}
+        <AuthProvider> 
+          <Navbar />
+          <div className="flex min-h-screen mt-5">
+            <Sidebar />
+            <div className="flex-1">
+              <div className="min-h-[200px] flex justify-center items-center">
+                <TakeInput />
+              </div>
+              {children}
+              <ToastContainer />
+            </div>
+          </div>
+        </AuthProvider>
       </body>
     </html>
   );
