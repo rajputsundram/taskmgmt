@@ -34,7 +34,7 @@ export default function RootLayout({
       >
         {/* ✅ Wrap your app with AuthProvider */}
         <AuthProvider> 
-          <Navbar />
+          <Navbar/>
           <div className="flex min-h-screen mt-5">
             <Sidebar />
             <div className="flex-1">

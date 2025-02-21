@@ -7,7 +7,7 @@ import { RiMoonClearFill } from "react-icons/ri";
 
 
 
-const Navbar = ({toggleSidebar}) => {
+const Navbar = () => {
   return (
     <div className="w-full bg-white shadow-md p-4 sticky top-0 z-10">
       <div className="flex justify-between items-center">
