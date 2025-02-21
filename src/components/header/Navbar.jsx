@@ -14,7 +14,7 @@ const Navbar = () => {
         
         {/* Logo Section */}
         <div className="flex items-center gap-4">
-        <span className=""   onClick={toggleSidebar}><FaBars size={24} /></span> {/* Hamburger for mobile */}
+        <span className=""   onClick={''}><FaBars size={24} /></span> {/* Hamburger for mobile */}
         
           <span className="text-2xl font-bold text-[#3F9142]">Logo</span>
         
