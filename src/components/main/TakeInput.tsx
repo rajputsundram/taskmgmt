@@ -3,25 +3,18 @@ import React, { useState } from "react";
 import { FaRegBell } from "react-icons/fa";
 import { CiCalendar, CiRepeat } from "react-icons/ci";
 import axios from "axios";
-import { useAuth } from "../../context/Authcontext"; // Use token from context
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
-const TakeInput = () => {
+const TakeInput = ({ refreshTasks }: { refreshTasks: () => void }) => {
   const [credentials, setCredentials] = useState({ title: "", description: "" });
   const [loading, setLoading] = useState(false);
-  const { token } = useAuth();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!credentials.title.trim() || !credentials.description.trim()) {
-      toast.error("Both title and description are required!");
-      return;
-    }
-    
-    if (!token) {
-      toast.error("Authentication error! Please log in again.");
+      toast.error("❌ Both title and description are required!");
       return;
     }
 
@@ -32,22 +25,24 @@ const TakeInput = () => {
         "/api/task",
         credentials,
         {
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          withCredentials: true, // ✅ Ensures cookies are sent
+          headers: { "Content-Type": "application/json" },
+          withCredentials: true, // ✅ Ensures cookies are sent with request
         }
       );
 
       if (response.data.success) {
         toast.success("✅ Task added successfully!");
         setCredentials({ title: "", description: "" });
+        refreshTasks(); // ✅ Refresh the task list after adding
       } else {
         toast.error("❌ Error adding task. Please try again.");
       }
-    } catch (error) {
-      toast.error("🚨 An error occurred. Please try again later.");
+    } catch (error: any) {
+      if (error.response?.status === 401) {
+        toast.error("🚨 Unauthorized: Please log in again.");
+      } else {
+        toast.error("❌ An error occurred. Please try again later.");
+      }
     } finally {
       setLoading(false);
     }

@@ -4,16 +4,16 @@ import Link from "next/link";
 import axios from "axios";
 import { toast } from "react-toastify";
 import { useRouter } from "next/navigation";
-import { useAuth } from "../../context/Authcontext"; // ✅ Import the AuthContext
+import { useAuth } from "../../context/Authcontext"; // ✅ Import AuthContext
 
 const Signup = () => {
     const router = useRouter();
-    const { setIsAuthenticated } = useAuth(); // ✅ Get authentication setter from context
+    const { setIsAuthenticated, checkAuth } = useAuth(); // ✅ Use checkAuth for updating state
+    
     const [credentials, setCredentials] = useState({
         name: "",
         email: "",
         password: "",
-      
     });
 
     const handleChange = (e) => {
@@ -39,25 +39,20 @@ const Signup = () => {
         }
 
         try {
-            const formData = new FormData();
-            formData.append("name", credentials.name);
-            formData.append("email", credentials.email);
-            formData.append("password", credentials.password);
-
-            const response = await axios.post("/api/signup", formData);
+            const response = await axios.post("/api/signup", credentials);
 
             if (response.data.success) {
                 toast.success("Signup successful! Redirecting...");
-
-                // ✅ Update authentication state
+                
+                // ✅ Update authentication state and fetch user info
                 setIsAuthenticated(true);
+                await checkAuth();
 
                 setCredentials({ name: "", email: "", password: "" });
 
-                // ✅ Redirect and refresh the page to update navbar
                 setTimeout(() => {
                     router.push("/"); 
-                    router.refresh(); // ✅ Ensures the navbar updates
+                    router.refresh(); // ✅ Ensures UI updates properly
                 }, 1000);
             } else {
                 toast.error(response.data.msg || "Signup failed. Try again.");
@@ -76,9 +71,7 @@ const Signup = () => {
                     className="bg-black text-gray-200 rounded-lg shadow-2xl px-8 pt-6 pb-8"
                 >
                     <div className="mb-4">
-                        <label htmlFor="name" className="  font-bold mb-2">
-                            Name
-                        </label>
+                        <label htmlFor="name" className="font-bold mb-2">Name</label>
                         <input
                             onChange={handleChange}
                             required
@@ -86,7 +79,7 @@ const Signup = () => {
                             placeholder="Enter your name"
                             type="text"
                             value={credentials.name}
-                            className="shadow  border-gray-300 rounded w-full py-2 px-3  text-gray-900 "
+                            className="shadow border-gray-300 rounded w-full py-2 px-3 text-gray-900"
                         />
                     </div>
                     <div className="mb-4">
@@ -97,7 +90,7 @@ const Signup = () => {
                             placeholder="Enter your email"
                             type="email"
                             value={credentials.email}
-                            className="shadow  border-gray-300 rounded w-full py-2 px-3  text-gray-900"
+                            className="shadow border-gray-300 rounded w-full py-2 px-3 text-gray-900"
                         />
                     </div>
                     <div className="mb-4">
@@ -109,7 +102,7 @@ const Signup = () => {
                             type="password"
                             placeholder="******"
                             value={credentials.password}
-                            className="shadow  border-gray-300 rounded w-full py-2 px-3  text-gray-900"
+                            className="shadow border-gray-300 rounded w-full py-2 px-3 text-gray-900"
                         />
                     </div>
                    
@@ -123,7 +116,7 @@ const Signup = () => {
                         <Link href="/login">
                             <button
                                 type="button"
-                                className="border font-bold  border-gray-400 rounded mr-2 p-2 hover:bg-orange-500 text-white  "
+                                className="border font-bold border-gray-400 rounded mr-2 p-2 hover:bg-orange-500 text-white"
                             >
                                 Already a user?
                             </button>

@@ -8,11 +8,11 @@ import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
 function Login() {
-    const { setUser, setIsAuthenticated } = useAuth();
+    const { setIsAuthenticated, checkAuth } = useAuth();
     const router = useRouter();
     const [credentials, setCredentials] = useState({ email: "", password: "" });
 
-    const handleSubmit = async (e: React.FormEvent) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
 
         try {
@@ -24,9 +24,9 @@ function Login() {
 
             if (response.data.success) {
                 toast.success("Login successful!");
-                setUser(response.data.user); // ✅ Store user data in context
                 setIsAuthenticated(true); // ✅ Mark as authenticated
-                router.push("/dashboard"); // ✅ Redirect after login
+                await checkAuth(); // ✅ Fetch user data after login
+                router.push("/"); // ✅ Redirect after login
             } else {
                 toast.error("Invalid credentials");
             }
@@ -35,7 +35,7 @@ function Login() {
         }
     };
 
-    const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const handleChange = (e) => {
         setCredentials({ ...credentials, [e.target.name]: e.target.value });
     };
 

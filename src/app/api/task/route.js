@@ -1,74 +1,70 @@
 import { connectDb } from "../../../lib/config/db";
 import Task from "../../../lib/models/Task";
+import Users from "../../../lib/models/Users";
 import { NextResponse } from "next/server";
-import { cookies } from "next/headers"; // ✅ Import cookies API
+import { cookies } from "next/headers";
+import jwt from "jsonwebtoken";
 
-// ✅ Function to extract user email from cookies
-const getUserEmailFromCookies = () => {
-  const cookieStore = cookies();
-  const userEmail = cookieStore.get("userEmail")?.value; // Extract userEmail
-  if (!userEmail) {
-    throw new Error("Unauthorized: User email not found in cookies");
+const SECRET_KEY = process.env.JWT_SECRET;
+
+// ✅ Function to extract user email from JWT stored in cookies
+const getUserFromToken = async () => {
+  try {
+    const cookieStore = await cookies();
+    const token = cookieStore.get("authToken")?.value;
+
+
+    const decoded = jwt.verify(token, SECRET_KEY);
+    return decoded.user.email; // Extract user email from token payload
+  } catch (error) {
+    console.error("❌ Error verifying token:", error.message);
+    return null;
   }
-  return userEmail;
 };
 
 // ✅ GET: Fetch all tasks for the logged-in user
 export async function GET() {
   try {
-    console.log("➡️ [GET] Fetching all tasks...");
-
     await connectDb();
-    const userEmail = getUserEmailFromCookies(); // ✅ Get email from cookies
+    const userEmail = await getUserFromToken();
+    if (!userEmail) {
+      return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
+    }
 
-    console.log("✔️ Logged-in User Email:", userEmail);
+    const user = await Users.findOne({ email: userEmail });
+    if (!user) {
+      return NextResponse.json({ success: false, error: "User not found" }, { status: 404 });
+    }
 
-    // Fetch only tasks that belong to the logged-in user
-    const tasks = await Task.find({ userEmail });
-
-    console.log("✔️ Found Tasks:", tasks.length);
-
+    const tasks = await Task.find({ user: user._id }).sort({ createdAt: -1 });
     return NextResponse.json({ success: true, tasks });
   } catch (error) {
-    console.error("❌ Error in GET:", error.message);
-    return NextResponse.json({ success: false, error: error.message }, { status: 401 });
+    return NextResponse.json({ success: false, error: error.message }, { status: 500 });
   }
 }
 
 // ✅ POST: Create a new task for the logged-in user
 export async function POST(req) {
   try {
-    console.log("➡️ [POST] Adding new task...");
-
     await connectDb();
-    const userEmail = getUserEmailFromCookies(); // ✅ Get email from cookies
+    const userEmail = await getUserFromToken();
+    if (!userEmail) {
+      return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
+    }
 
-    console.log("✔️ Logged-in User Email:", userEmail);
+    const user = await Users.findOne({ email: userEmail });
+    if (!user) {
+      return NextResponse.json({ success: false, error: "User not found" }, { status: 404 });
+    }
 
-    const { title, description, isCompleted } = await req.json(); // Get data from request body
-
-    console.log("✔️ Received Data:", { title, description, isCompleted });
-
+    const { title, description, isCompleted } = await req.json();
     if (!title || !description) {
-      console.error("❌ Missing title or description");
       return NextResponse.json({ success: false, error: "Title and Description are required" }, { status: 400 });
     }
 
-    // Create a new task and save it to the database
-    const newTask = new Task({
-      title,
-      description,
-      userEmail, // ✅ Associate the task with the logged-in user's email
-      isCompleted: isCompleted || false, // Default to false if not provided
-    });
-
-    await newTask.save();
-
-    console.log("✔️ Task Saved:", newTask);
-
+    const newTask = await Task.create({ title, description, user: user._id, isCompleted: isCompleted || false });
     return NextResponse.json({ success: true, task: newTask });
   } catch (error) {
-    console.error("❌ Error in POST:", error.message);
-    return NextResponse.json({ success: false, error: error.message }, { status: 401 });
+    return NextResponse.json({ success: false, error: error.message }, { status: 500 });
   }
 }

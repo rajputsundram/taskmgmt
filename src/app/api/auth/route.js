@@ -15,7 +15,8 @@ export async function GET() {
 
     try {
         // ✅ Correct way to access cookies in Next.js App Router
-        const token = cookies().get("authToken")?.value; // 👈 Fix: No `await` needed
+        const cookieStore = await cookies(); // 👈 FIX: Await cookies()
+        const token = cookieStore.get("authToken")?.value; 
         
         if (!token) {
             return NextResponse.json({ isAuthenticated: false, error: "No token found" }, { status: 401 });
