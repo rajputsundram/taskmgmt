@@ -6,7 +6,11 @@ import axios from "axios";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
-const TakeInput = ({ refreshTasks }: { refreshTasks: () => void }) => {
+type TakeInputProps = {
+  refreshTasks: () => void;
+};
+
+const TakeInput: React.FC<TakeInputProps> = ({ refreshTasks }) => {
   const [credentials, setCredentials] = useState({ title: "", description: "" });
   const [loading, setLoading] = useState(false);
 
@@ -21,19 +25,15 @@ const TakeInput = ({ refreshTasks }: { refreshTasks: () => void }) => {
     setLoading(true);
     
     try {
-      const response = await axios.post(
-        "/api/task",
-        credentials,
-        {
-          headers: { "Content-Type": "application/json" },
-          withCredentials: true, // ✅ Ensures cookies are sent with request
-        }
-      );
+      const response = await axios.post("/api/task", credentials, {
+        headers: { "Content-Type": "application/json" },
+        withCredentials: true,
+      });
 
       if (response.data.success) {
         toast.success("✅ Task added successfully!");
         setCredentials({ title: "", description: "" });
-        refreshTasks(); // ✅ Refresh the task list after adding
+        refreshTasks();
       } else {
         toast.error("❌ Error adding task. Please try again.");
       }
@@ -51,7 +51,7 @@ const TakeInput = ({ refreshTasks }: { refreshTasks: () => void }) => {
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
   ) => {
-    setCredentials({ ...credentials, [e.target.name]: e.target.value });
+    setCredentials((prev) => ({ ...prev, [e.target.name]: e.target.value }));
   };
 
   return (
@@ -84,9 +84,7 @@ const TakeInput = ({ refreshTasks }: { refreshTasks: () => void }) => {
           </div>
           <button
             type="submit"
-            className={`px-6 py-3 rounded-md text-white bg-[#3F9142] hover:bg-[#2d6d2f] text-lg transition-all ${
-              loading ? "opacity-50 cursor-not-allowed" : ""
-            }`}
+            className={`px-6 py-3 rounded-md text-white bg-[#3F9142] hover:bg-[#2d6d2f] text-lg transition-all ${loading ? "opacity-50 cursor-not-allowed" : ""}`}
             disabled={loading}
           >
             {loading ? "Adding..." : "ADD TASK"}
